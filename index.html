@@ -410,4 +410,44 @@
         }
       };
 
-      const prioridadActual = getPrioridad(formData.nivel);
+      const prioridadActual = getPrioridad(formDat.nivel);
+      if (isLoadingUser) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-mallorca-bg">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-mallorca-accent/20 border-t-mallorca-accent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-mallorca-text font-bold text-lg">Cargando sistema...</p>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-mallorca-bg">
+          {/* Aquí empieza tu interfaz completa */}
+
+          <main className="max-w-7xl mx-auto px-4 py-8">
+
+            {!discordUser ? (
+              <div className="max-w-lg mx-auto mt-20">
+                <div className="bg-mallorca-card/90 backdrop-blur-xl rounded-xl shadow-xl border border-mallorca-accent2/20 p-12 text-center">
+                  <div className="w-24 h-24 bg-mallorca-accent2 rounded-xl flex items-center justify-center mx-auto mb-8 shadow-xl border border-mallorca-accent">
+                    <IconShield />
+                  </div>
+                  <h2 className="text-3xl font-black text-white mb-4">Acceso Seguro</h2>
+                  <p className="text-mallorca-text2 text-sm mb-8">
+                    Inicie sesión con Discord para acceder al panel de operador.
+                  </p>
+                  <button
+                    onClick={handleDiscordLogin}
+                    className="w-full bg-mallorca-accent2 hover:bg-mallorca-accent text-white font-bold py-4 rounded-lg flex items-center justify-center gap-3 shadow-lg transition-all"
+                  >
+                    <IconLogin />
+                    <span className="text-lg">Iniciar Sesión con Discord</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    
