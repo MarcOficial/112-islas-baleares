@@ -207,11 +207,11 @@ return(
 
 return(
 <div className="min-h-screen bg-[radial-gradient(circle_at_top,#7f1d1d,#020617_70%)]">
-<header className="bg-black/50 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+<header className="bg-black/70 backdrop-blur-2xl border-b border-red-500/30 sticky top-0 z-50 shadow-xl">
 <div className="max-w-7xl mx-auto px-4 py-4">
 <div className="flex items-center justify-between">
 <div className="flex items-center gap-4">
-<div className="w-14 h-14 bg-gradient-to-br from-red-600 to-orange-600 rounded-2xl flex items-center justify-center shadow-2xl">
+<div className="w-14 h-14 bg-red-600 rounded-xl flex items-center justify-center shadow-[0_0_25px_#dc2626] animate-pulse">
 <Phone/>
 </div>
 <div>
@@ -257,11 +257,11 @@ return(
 ):(
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 <div className="lg:col-span-2 space-y-6">
-<div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6">
+<div className="bg-slate-900/90 backdrop-blur-2xl rounded-xl shadow-[0_0_30px_#7f1d1d40] border border-red-500/30 p-6">
 <h3 className="text-xl font-black text-white mb-5">Servicio de Emergencia</h3>
 <div className="grid grid-cols-3 gap-4">
 {servicios.map(s=>(
-<button key={s.value} onClick={()=>setFormData({...formData,servicio:s.value})} className={`p-6 rounded-xl border-2 transition-all ${formData.servicio===s.value?'border-blue-500 bg-blue-500/20 scale-105 shadow-xl':'border-white/10 bg-white/5 hover:bg-white/10'}`}>
+<button key={s.value} onClick={()=>setFormData({...formData,servicio:s.value})} className={`p-6 rounded-xl border-2 transition-all ${formData.servicio===s.value?'border-red-500 bg-red-500/30 shadow-[0_0_25px_#ef4444] scale-105 shadow-xl':'border-red-500/20 bg-black/40 hover:bg-red-500/10 hover:shadow-[0_0_20px_#ef4444]'}`}>
 <div className="text-5xl mb-2">{s.icon}</div>
 <p className="font-bold text-white text-sm">{s.value}</p>
 </button>
@@ -279,7 +279,7 @@ return(
 <p className="text-sm text-slate-400">Nivel {formData.nivel}/20</p>
 </div>
 </div>
-<input type="range" min="1" max="20" value={formData.nivel} onChange={(e)=>setFormData({...formData,nivel:parseInt(e.target.value)})} className="w-full h-3 rounded-lg appearance-none cursor-pointer" style={{background:'linear-gradient(to right,#10b981 0%,#10b981 25%,#f59e0b 25%,#f59e0b 50%,#ef4444 50%,#ef4444 100%)'}}/>
+<input type="range" min="1" max="20" value={formData.nivel} onChange={(e)=>setFormData({...formData,nivel:parseInt(e.target.value)})} className="w-full h-4 rounded-full appearance-none cursor-pointer shadow-[0_0_20px_#ef4444]" style={{background:'linear-gradient(to right,#10b981 0%,#10b981 25%,#f59e0b 25%,#f59e0b 50%,#ef4444 50%,#ef4444 100%)'}}/>
 <div className="flex justify-between text-xs text-slate-400 font-bold">
 <span>1-5 Baja 🟢</span>
 <span>6-10 Media 🟡</span>
@@ -293,11 +293,11 @@ return(
 <div className="space-y-4">
 <div>
 <label className="block text-sm font-bold text-slate-300 mb-2">Descripción *</label>
-<textarea value={formData.incidente} onChange={(e)=>setFormData({...formData,incidente:e.target.value})} placeholder="Describa la emergencia..." rows="3" className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"/>
+<textarea value={formData.incidente} onChange={(e)=>setFormData({...formData,incidente:e.target.value})} placeholder="Describa la emergencia..." rows="3" className="w-full px-4 py-3 bg-black/50 border border-red-500/30 focus:ring-red-500 focus:border-red-500 shadow-inner rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"/>
 </div>
 <div>
 <label className="block text-sm font-bold text-slate-300 mb-2 flex items-center gap-2"><User/>Ciudadano (IC) *</label>
-<input type="text" value={formData.ciudadano} onChange={(e)=>setFormData({...formData,ciudadano:e.target.value})} placeholder="Nombre del ciudadano" className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"/>
+<input type="text" value={formData.ciudadano} onChange={(e)=>setFormData({...formData,ciudadano:e.target.value})} placeholder="Nombre del ciudadano" className="w-full px-4 py-3 bg-black/50 border border-red-500/30 focus:ring-red-500 focus:border-red-500 shadow-inner rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"/>
 </div>
 <div>
 <label className="block text-sm font-bold text-slate-300 mb-2 flex items-center gap-2"><MapPin/>Ubicación *</label>
