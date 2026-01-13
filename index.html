@@ -149,39 +149,8 @@
         return () => clearInterval(timer);
       }, []);
 
-
-      const [isSubmitting, setIsSubmitting] = useState(false);
-      const [notification, setNotification] = useState({
-        show: false,
-        message: "",
-        type: "",
-      });
-      const [discordUser, setDiscordUser] = useState(null);
-      const [isLoadingUser, setIsLoadingUser] = useState(true);
-      const [currentTime, setCurrentTime] = useState(new Date());
-
-      const servicios = [
-        { value: "Policía Local", icon: "👮‍♀️", emoji: "🚓", roleId: "ROLE_ID_POLICIA_LOCAL" },
-        { value: "Policía Nacional", icon: "👮‍♂️", emoji: "🚔", roleId: "1398228126919561216" },
-        { value: "Guardia Civil", icon: "🛡️", emoji: "🚨", roleId: "ROLE_ID_GUARDIA_CIVIL" },
-        { value: "SAMU 061", icon: "🚑", emoji: "🏥", roleId: "1398274968705568878" },
-        { value: "Bomberos", icon: "🚒", emoji: "🔥", roleId: "1398274299151913061" },
-        { value: "Conservación", icon: "🧰", emoji: "⚙️", roleId: "ROLE_ID_CONSERVACION" },
-      ];
-
-      const getPrioridad = (n) => {
-        if (n >= 1 && n <= 5)
-          return { label: "BAJA", icon: "🟢", colorHex: 1096065, bg: "from-green-500 to-green-700", text: "text-green-400" };
-        if (n >= 6 && n <= 10)
-          return { label: "MEDIA", icon: "🟡", colorHex: 16162315, bg: "from-yellow-500 to-yellow-700", text: "text-yellow-400" };
-        return { label: "ALTA", icon: "🔴", colorHex: 15680580, bg: "from-red-500 to-red-700", text: "text-red-400" };
-      };
-
-      useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-      }, []);
-
+  
+      /* AUTENTICACIÓN DISCORD */
       useEffect(() => {
         const token = localStorage.getItem("discord_token");
         if (token) {
@@ -209,7 +178,7 @@
           } else {
             localStorage.removeItem("discord_token");
           }
-        } catch (error) {
+        } catch {
           localStorage.removeItem("discord_token");
         } finally {
           setIsLoadingUser(false);
@@ -226,18 +195,19 @@
         setDiscordUser(null);
       };
 
+      /* NOTIFICACIONES */
       const showNotification = (message, type) => {
         setNotification({ show: true, message, type });
         setTimeout(() => setNotification({ show: false, message: "", type: "" }), 4000);
       };
 
+      /* ENVÍO DEL FORMULARIO */
       const handleSubmit = async () => {
         if (!discordUser) {
           showNotification("Debe iniciar sesión", "error");
           return;
         }
 
-        // OBLIGATORIOS: servicio, incidente, ciudadanoIC, ubicacion
         if (
           !formData.servicio ||
           !formData.incidente.trim() ||
@@ -255,20 +225,8 @@
           const prioridad = getPrioridad(formData.nivel);
           const timestamp = new Date();
 
-          const incidenteTipo = formData.tipoIncidente.trim() || "No especificado";
-          const estadoCiudadano = formData.estadoCiudadano.trim() || "No especificado";
-          const numPersonas = formData.numeroPersonas.trim() || "No indicado";
-          const vehiculo = formData.vehiculo.trim() || "No indicado";
-
-          const telefonoIC = formData.telefonoIC.trim() || "No indicado";
-          const edadIC = formData.edadIC.trim() || "No indicada";
-          const docIC = formData.documentoIC.trim() || "No indicado";
-          const grupoSang = formData.grupoSanguineo.trim() || "No indicado";
-          const condMedicas = formData.condicionesMedicas.trim() || "No indicadas";
-
-          const oocNombre = formData.ciudadanoOOC.trim() || "No indicado";
-          const oocDiscord = formData.idDiscordOOC.trim() || "No indicado";
-          const oocNotas = formData.notasOOC.trim() || "Sin notas";
+          /* CAMPOS OPCIONALES */
+          const safe = (v, def = "No indicado") => (v && v.trim() !== "" ? v : def);
 
           const embed = {
             author: {
@@ -278,121 +236,114 @@
             title: `${prioridad.icon} EMERGENCIA - PRIORIDAD ${prioridad.label}`,
             description:
               `**${servicio.emoji} ${servicio.value.toUpperCase()}**\n` +
-              `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-              `> Sistema 112 Islas Baleares • Registro automático`,
+              `────────────────────────────\n` +
+              `> Registro automático del sistema 112 Islas Baleares`,
             color: prioridad.colorHex,
             fields: [
               {
                 name: "📋 DESCRIPCIÓN DEL INCIDENTE",
                 value: `\`\`\`\n${formData.incidente}\n\`\`\``,
-                inline: false,
               },
               {
-                name: "📂 TIPO DE INCIDENTE",
-                value: `\`${incidenteTipo}\``,
+                name: "📂 Tipo de incidente",
+                value: `\`${safe(formData.tipoIncidente)}\``,
                 inline: true,
               },
               {
-                name: "👥 PERSONAS IMPLICADAS",
-                value: `\`${numPersonas}\``,
+                name: "👥 Personas implicadas",
+                value: `\`${safe(formData.numeroPersonas)}\``,
                 inline: true,
               },
               {
-                name: "🧠 ESTADO DEL CIUDADANO",
-                value: `\`${estadoCiudadano}\``,
-                inline: false,
+                name: "🧠 Estado del ciudadano",
+                value: `\`${safe(formData.estadoCiudadano)}\``,
               },
               {
-                name: "🚗 VEHÍCULO IMPLICADO",
-                value: `\`${vehiculo}\``,
-                inline: false,
+                name: "🚗 Vehículo implicado",
+                value: `\`${safe(formData.vehiculo)}\``,
               },
+
+              /* IC */
               {
                 name: "━━━━━━━━ DATOS IC ━━━━━━━━",
                 value: "\u200b",
-                inline: false,
               },
               {
-                name: "👤 CIUDADANO (IC) *",
+                name: "👤 Ciudadano (IC) *",
                 value: `\`${formData.ciudadanoIC}\``,
                 inline: true,
               },
               {
-                name: "🪪 DOCUMENTO (DNI/NIE/PAS)",
-                value: `\`${docIC}\``,
+                name: "🪪 Documento",
+                value: `\`${safe(formData.documentoIC)}\``,
                 inline: true,
               },
               {
-                name: "📞 TELÉFONO (IC)",
-                value: `\`${telefonoIC}\``,
+                name: "📞 Teléfono (IC)",
+                value: `\`${safe(formData.telefonoIC)}\``,
                 inline: true,
               },
               {
-                name: "🎂 EDAD (IC)",
-                value: `\`${edadIC}\``,
+                name: "🎂 Edad (IC)",
+                value: `\`${safe(formData.edadIC)}\``,
                 inline: true,
               },
               {
-                name: "🩸 GRUPO SANGUÍNEO",
-                value: `\`${grupoSang}\``,
+                name: "🩸 Grupo sanguíneo",
+                value: `\`${safe(formData.grupoSanguineo)}\``,
                 inline: true,
               },
               {
-                name: "⚕️ CONDICIONES MÉDICAS",
-                value: `\`${condMedicas}\``,
-                inline: false,
+                name: "⚕️ Condiciones médicas",
+                value: `\`${safe(formData.condicionesMedicas)}\``,
               },
               {
-                name: "📍 UBICACIÓN *",
+                name: "📍 Ubicación *",
                 value: `\`${formData.ubicacion}\``,
-                inline: false,
               },
+
+              /* OOC */
               {
                 name: "━━━━━━━━ DATOS OOC ━━━━━━━━",
                 value: "\u200b",
-                inline: false,
               },
               {
-                name: "👤 JUGADOR (OOC)",
-                value: `\`${oocNombre}\``,
+                name: "👤 Jugador (OOC)",
+                value: `\`${safe(formData.ciudadanoOOC)}\``,
                 inline: true,
               },
               {
-                name: "🆔 DISCORD (OOC)",
-                value: `\`${oocDiscord}\``,
+                name: "🆔 Discord (OOC)",
+                value: `\`${safe(formData.idDiscordOOC)}\``,
                 inline: true,
               },
               {
-                name: "📝 NOTAS OOC",
-                value: `\`\`\`\n${oocNotas}\n\`\`\``,
-                inline: false,
+                name: "📝 Notas OOC",
+                value: `\`\`\`\n${safe(formData.notasOOC, "Sin notas")}\n\`\`\``,
               },
+
+              /* OPERADOR */
               {
                 name: "━━━━━━━━ OPERADOR ━━━━━━━━",
                 value: "\u200b",
-                inline: false,
               },
               {
-                name: "👨‍💼 RESPONSABLE",
+                name: "👨‍💼 Responsable",
                 value: `<@${discordUser.id}> • \`${discordUser.username}\``,
                 inline: true,
               },
               {
-                name: `${prioridad.icon} PRIORIDAD`,
+                name: `${prioridad.icon} Prioridad`,
                 value: `\`${prioridad.label} (Nivel ${formData.nivel}/20)\``,
                 inline: true,
               },
               {
-                name: "📅 FECHA",
-                value: `\`${timestamp.toLocaleDateString("es-ES", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}\``,
+                name: "📅 Fecha",
+                value: `\`${timestamp.toLocaleDateString("es-ES")}\``,
                 inline: true,
               },
               {
-                name: "⏰ HORA",
+                name: "⏰ Hora",
                 value: `\`${timestamp.toLocaleTimeString("es-ES")}\``,
                 inline: true,
               },
@@ -401,7 +352,7 @@
               url: `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`,
             },
             footer: {
-              text: "112 Mallorca • Sistema de Emergencias ©",
+              text: "112 Mallorca • Sistema de Emergencias",
               icon_url: "https://cdn-icons-png.flaticon.com/512/3588/3588592.png",
             },
             timestamp: timestamp.toISOString(),
@@ -417,24 +368,22 @@
               body: JSON.stringify({
                 content:
                   `${roleMention}\n\n` +
-                  `⚠️ **NUEVA EMERGENCIA REGISTRADA** ⚠️\n` +
+                  `🚨 **NUEVA EMERGENCIA REGISTRADA**\n` +
                   `${prioridad.icon} **PRIORIDAD ${prioridad.label}** · Nivel ${formData.nivel}/20\n` +
-                  `${servicio.emoji} **Servicio:** ${servicio.value}\n` +
+                  `${servicio.emoji} **Servicio asignado:** ${servicio.value}\n` +
                   `👤 **Operador:** <@${discordUser.id}>`,
                 username: "Central 112 Mallorca",
-                avatar_url:
-                  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEA69X_qWWBU-3O3PcgrumqVEJoVA4dXWhIw&s",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/3588/3588592.png",
                 embeds: [embed],
               }),
             }
           );
 
-          if (!response.ok) {
-            throw new Error("Error al enviar");
-          }
+          if (!response.ok) throw new Error("Error al enviar");
 
           showNotification("✓ Emergencia reportada correctamente", "success");
 
+          /* RESET */
           setFormData({
             servicio: "",
             incidente: "",
@@ -454,7 +403,7 @@
             notasOOC: "",
             nivel: 10,
           });
-        } catch (error) {
+        } catch {
           showNotification("Error de conexión al enviar la emergencia", "error");
         } finally {
           setIsSubmitting(false);
@@ -462,477 +411,3 @@
       };
 
       const prioridadActual = getPrioridad(formData.nivel);
-
-      if (isLoadingUser) {
-        return (
-          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-20 h-20 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white font-bold text-lg">Cargando sistema...</p>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-slate-900">
-          {/* HEADER */}
-          <header className="bg-black/50 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-orange-600 rounded-2xl flex items-center justify-center shadow-2xl">
-                    <Phone />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-black text-white">112 Mallorca</h1>
-                    <p className="text-xs text-slate-300 font-semibold">
-                      Sistema de Emergencias · Panel de operador
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl">
-                    <Clock />
-                    <span className="text-sm font-bold text-black">
-                      {currentTime.toLocaleTimeString("es-ES")}
-                    </span>
-                  </div>
-                  {discordUser && (
-                    <div className="flex items-center gap-3 bg-green-500/20 px-4 py-2 rounded-xl border border-green-500/30">
-                      <img
-                        src={`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`}
-                        className="w-9 h-9 rounded-full ring-2 ring-green-400"
-                      />
-                      <div className="hidden sm:block">
-                        <p className="text-sm font-bold text-white">{discordUser.username}</p>
-                        <p className="text-xs text-green-300">● Operador activo</p>
-                      </div>
-                      <button
-                        onClick={handleLogout}
-                        className="text-xs text-slate-300 hover:text-red-400 font-bold"
-                      >
-                        Salir
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </header>
-
-          <main className="max-w-7xl mx-auto px-4 py-8">
-            {!discordUser ? (
-              // PANTALLA LOGIN
-              <div className="max-w-lg mx-auto mt-20">
-                <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 p-12 text-center">
-                  <div className="w-28 h-28 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                    <Shield />
-                  </div>
-                  <h2 className="text-4xl font-black text-white mb-4">Acceso Seguro</h2>
-                  <p className="text-slate-300 text-lg mb-1">Autenticación requerida</p>
-                  <p className="text-slate-400 text-sm mb-8">
-                    Inicie sesión con Discord para identificarse como operador autorizado del 112.
-                  </p>
-                  <button
-                    onClick={handleDiscordLogin}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 shadow-2xl transform hover:scale-105 transition-all"
-                  >
-                    <LogIn />
-                    <span className="text-lg">Iniciar Sesión con Discord</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              // PANEL PRINCIPAL
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                  {/* SERVICIO */}
-                  <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6">
-                    <h3 className="text-xl font-black text-white mb-5 border-l-4 border-red-500 pl-3">
-                      Servicio de Emergencia
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {servicios.map((s) => (
-                        <button
-                          key={s.value}
-                          onClick={() => setFormData({ ...formData, servicio: s.value })}
-                          className={`p-4 rounded-xl border-2 transition-all text-left ${
-                            formData.servicio === s.value
-                              ? "border-blue-500 bg-blue-500/20 scale-105 shadow-xl"
-                              : "border-white/10 bg-white/5 hover:bg-white/10"
-                          }`}
-                        >
-                          <div className="text-3xl mb-1">{s.icon}</div>
-                          <p className="font-bold text-white text-sm">{s.value}</p>
-                          <p className="text-[11px] text-slate-400 mt-1">
-                            Seleccionar para dirigir el aviso
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* PRIORIDAD */}
-                  <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6">
-                    <h3 className="text-xl font-black text-white mb-5 border-l-4 border-amber-500 pl-3">
-                      Nivel de Prioridad
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-4xl">{prioridadActual.icon}</span>
-                        <div>
-                          <p className={`text-2xl font-black ${prioridadActual.text}`}>
-                            {prioridadActual.label}
-                          </p>
-                          <p className="text-sm text-slate-400">Nivel {formData.nivel}/20</p>
-                        </div>
-                      </div>
-                      <input
-                        type="range"
-                        min="1"
-                        max="20"
-                        value={formData.nivel}
-                        onChange={(e) =>
-                          setFormData({ ...formData, nivel: parseInt(e.target.value) })
-                        }
-                        className="w-full h-3 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                          background:
-                            "linear-gradient(to right,#10b981 0%,#10b981 25%,#f59e0b 25%,#f59e0b 50%,#ef4444 50%,#ef4444 100%)",
-                        }}
-                      />
-                      <div className="flex justify-between text-xs text-slate-400 font-bold">
-                        <span>1-5 Baja 🟢</span>
-                        <span>6-10 Media 🟡</span>
-                        <span>11-20 Alta 🔴</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* INCIDENTE + DATOS IC/OOC */}
-                  <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6 space-y-6">
-                    <h3 className="text-xl font-black text-white mb-2 border-l-4 border-blue-500 pl-3">
-                      Información del Incidente
-                    </h3>
-
-                    {/* Descripción & tipo */}
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-bold text-slate-300 mb-2">
-                          Descripción de la emergencia *
-                        </label>
-                        <textarea
-                          value={formData.incidente}
-                          onChange={(e) =>
-                            setFormData({ ...formData, incidente: e.target.value })
-                          }
-                          placeholder="Describa la emergencia de forma clara y breve..."
-                          rows="3"
-                          className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Tipo de incidente (IC)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.tipoIncidente}
-                            onChange={(e) =>
-                              setFormData({ ...formData, tipoIncidente: e.target.value })
-                            }
-                            placeholder="Accidente, pelea, incendio, robo..."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Nº de personas implicadas (IC)
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={formData.numeroPersonas}
-                            onChange={(e) =>
-                              setFormData({ ...formData, numeroPersonas: e.target.value })
-                            }
-                            placeholder="1, 2, 3..."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Estado del ciudadano (IC)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.estadoCiudadano}
-                            onChange={(e) =>
-                              setFormData({ ...formData, estadoCiudadano: e.target.value })
-                            }
-                            placeholder="Consciente, inconsciente, agresivo, nervioso..."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Vehículo implicado (IC)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.vehiculo}
-                            onChange={(e) =>
-                              setFormData({ ...formData, vehiculo: e.target.value })
-                            }
-                            placeholder="Modelo, color, matrícula..."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* IC */}
-                    <div className="border-t border-white/10 pt-4">
-                      <h4 className="text-sm font-bold text-sky-300 uppercase mb-3">
-                        Datos del ciudadano (IC)
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2 flex items-center gap-2">
-                            <User /> Ciudadano (IC) *
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.ciudadanoIC}
-                            onChange={(e) =>
-                              setFormData({ ...formData, ciudadanoIC: e.target.value })
-                            }
-                            placeholder="Nombre y apellidos IC"
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Documento (DNI/NIE/Pasaporte)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.documentoIC}
-                            onChange={(e) =>
-                              setFormData({ ...formData, documentoIC: e.target.value })
-                            }
-                            placeholder="12345678-A / X1234567..."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Teléfono (IC) (opcional)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.telefonoIC}
-                            onChange={(e) =>
-                              setFormData({ ...formData, telefonoIC: e.target.value })
-                            }
-                            placeholder="Número de contacto IC"
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Edad (IC) (opcional)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={formData.edadIC}
-                            onChange={(e) =>
-                              setFormData({ ...formData, edadIC: e.target.value })
-                            }
-                            placeholder="Edad aproximada"
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Grupo sanguíneo (opcional)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.grupoSanguineo}
-                            onChange={(e) =>
-                              setFormData({ ...formData, grupoSanguineo: e.target.value })
-                            }
-                            placeholder="0+, A-, B+, AB..."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Condiciones médicas (opcional)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.condicionesMedicas}
-                            onChange={(e) =>
-                              setFormData({ ...formData, condicionesMedicas: e.target.value })
-                            }
-                            placeholder="Alergias, medicación, patologías..."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-bold text-slate-300 mb-2 flex items-center gap-2">
-                            <MapPin /> Ubicación exacta *
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.ubicacion}
-                            onChange={(e) =>
-                              setFormData({ ...formData, ubicacion: e.target.value })
-                            }
-                            placeholder="Calle, número, referencia visual..."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* OOC */}
-                    <div className="border-t border-white/10 pt-4">
-                      <h4 className="text-sm font-bold text-amber-300 uppercase mb-3">
-                        Información OOC
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Nombre del jugador (OOC)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.ciudadanoOOC}
-                            onChange={(e) =>
-                              setFormData({ ...formData, ciudadanoOOC: e.target.value })
-                            }
-                            placeholder="Tu nombre o nick OOC"
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            ID / Tag de Discord (OOC)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.idDiscordOOC}
-                            onChange={(e) =>
-                              setFormData({ ...formData, idDiscordOOC: e.target.value })
-                            }
-                            placeholder="Ej: Nombre#0000, UID, etc."
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-bold text-slate-300 mb-2">
-                            Notas OOC para el staff (opcional)
-                          </label>
-                          <textarea
-                            value={formData.notasOOC}
-                            onChange={(e) =>
-                              setFormData({ ...formData, notasOOC: e.target.value })
-                            }
-                            placeholder="Información adicional OOC: contexto de rol, aclaraciones, bugs, etc."
-                            rows="3"
-                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* COLUMNA DERECHA: operador, estado, botón enviar */}
-                <div className="space-y-6">
-                  <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6">
-                    <h3 className="text-sm font-bold text-slate-300 mb-4 uppercase">
-                      Operador
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`}
-                        className="w-16 h-16 rounded-xl ring-2 ring-white/20"
-                      />
-                      <div>
-                        <p className="font-bold text-white text-lg">{discordUser.username}</p>
-                        <p className="text-xs text-green-400">✓ Verificado por Discord</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6">
-                    <h3 className="text-sm font-bold text-slate-300 mb-4 uppercase">
-                      Estado del sistema
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Conexión</span>
-                        <span className="text-green-400 font-bold">● Activa</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Webhook</span>
-                        <span className="text-green-400 font-bold">● Operativo</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Operador</span>
-                        <span className="text-sky-400 font-bold">● Identificado</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 disabled:from-slate-600 disabled:to-slate-700 text-white font-black py-5 rounded-xl flex items-center justify-center gap-3 shadow-2xl transform hover:scale-105 disabled:hover:scale-100 transition-all"
-                  >
-                    {isSubmitting ? (
-                      <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <>
-                        <Send />
-                        <span className="text-lg">REPORTAR EMERGENCIA</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-          </main>
-
-          {/* NOTIFICACIONES */}
-          {notification.show && (
-            <div className="fixed top-6 right-6 z-50">
-              <div
-                className={`${
-                  notification.type === "success" ? "bg-green-600" : "bg-red-600"
-                } text-white px-6 py-4 rounded-xl shadow-2xl font-bold`}
-              >
-                {notification.message}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    ReactDOM.render(<Emergency112 />, document.getElementById("root"));
-  </script>
-</body>
-</html>
-  
