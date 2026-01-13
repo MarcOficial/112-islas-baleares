@@ -71,11 +71,22 @@ const servicios = [
 ];
 
 
-const getPrioridad=(n)=>{
-if(n>=1&&n<=5)return{label:'BAJA',icon:'🟢',colorHex:1096065,bg:'from-green-500 to-green-700',text:'text-green-400'};
-if(n>=6&&n<=10)return{label:'MEDIA',icon:'🟡',colorHex:16162315,bg:'from-yellow-500 to-yellow-700',text:'text-yellow-400'};
-return{label:'ALTA',icon:'🔴',colorHex:15680580,bg:'from-red-500 to-red-700',text:'text-red-400'};
+const getPrioridad = (n) => {
+  if (n >= 1 && n <= 4) 
+    return { label: 'MUY BAJA', icon: '🟢', colorHex: 0x10b981, bg: 'from-green-500 to-green-700', text: 'text-green-400' };
+  if (n >= 5 && n <= 8) 
+    return { label: 'BAJA', icon: '🟢', colorHex: 0x22c55e, bg: 'from-green-400 to-green-600', text: 'text-green-300' };
+  if (n >= 9 && n <= 12) 
+    return { label: 'MEDIA', icon: '🟡', colorHex: 0xfacc15, bg: 'from-yellow-500 to-yellow-700', text: 'text-yellow-400' };
+  if (n >= 13 && n <= 16) 
+    return { label: 'ALTA', icon: '🟠', colorHex: 0xf97316, bg: 'from-orange-500 to-orange-700', text: 'text-orange-400' };
+  if (n >= 17 && n <= 20) 
+    return { label: 'CRÍTICA', icon: '🔴', colorHex: 0xef4444, bg: 'from-red-500 to-red-700', text: 'text-red-500' };
+
+  // fallback por si hay un valor fuera de rango
+  return { label: 'DESCONOCIDA', icon: '❔', colorHex: 0x6b7280, bg: 'from-gray-400 to-gray-600', text: 'text-gray-400' };
 };
+
 
 useEffect(()=>{
 const timer=setInterval(()=>setCurrentTime(new Date()),1000);
